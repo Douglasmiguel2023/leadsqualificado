@@ -20,9 +20,15 @@
   <main>
     <section class="card">
       <div class="tabs">
-        <button id="tab-auto" class="tab active">🔗 Analisar post (URL)</button>
-        <button id="tab-manual" class="tab">✍️ Modo manual</button>
+        <button id="tab-auto" class="tab active" data-tab="auto">🔗 Analisar post (URL)</button>
+        <button id="tab-manual" class="tab" data-tab="manual">✍️ Modo manual</button>
+        <button id="tab-scan" class="tab" data-tab="scan">🔍 Varredura de perfil</button>
       </div>
+
+      <details class="niche">
+        <summary>Palavras-chave do nicho (opcional)</summary>
+        <textarea id="keywords" rows="3" placeholder="Deixe vazio para usar o padrão de design, ou separe por vírgula: logo, identidade visual, site..."></textarea>
+      </details>
 
       <div id="panel-auto" class="panel">
         <label for="post-url">URL do post ou reel público</label>
@@ -30,10 +36,6 @@
           <input id="post-url" type="url" placeholder="https://www.instagram.com/p/Cxxxxxxx/" />
           <button id="btn-analyze" class="primary">Analisar</button>
         </div>
-        <details class="niche">
-          <summary>Palavras-chave do nicho (opcional)</summary>
-          <textarea id="keywords" rows="3" placeholder="Deixe vazio para usar o padrão de design, ou separe por vírgula: logo, identidade visual, site..."></textarea>
-        </details>
         <p class="hint">Dica: a coleta automática funciona melhor rodando o app na sua máquina (IP residencial). Se o Instagram bloquear, use o modo manual.</p>
       </div>
 
@@ -53,6 +55,36 @@
         <div class="row">
           <button id="btn-analyze-manual" class="primary">Analisar comentários</button>
           <button id="btn-demo" class="ghost">Carregar exemplo</button>
+        </div>
+      </div>
+
+      <div id="panel-scan" class="panel hidden">
+        <label for="scan-username">@ do perfil para varrer (seu, de um concorrente ou influencer do nicho)</label>
+        <div class="row">
+          <input id="scan-username" type="text" placeholder="@dseng.designer" />
+          <button id="btn-scan" class="primary">Varrer</button>
+        </div>
+        <div class="row two">
+          <div>
+            <label for="scan-mode">Modo de varredura</label>
+            <select id="scan-mode">
+              <option value="comments">Quem comenta e curte os posts (sem login)</option>
+              <option value="followers">Seguidores do perfil (precisa do sessionid)</option>
+            </select>
+          </div>
+          <div id="scan-posts-group">
+            <label for="scan-max-posts">Posts recentes para analisar</label>
+            <input id="scan-max-posts" type="number" value="6" min="1" max="12" />
+          </div>
+          <div id="scan-session-group" class="hidden">
+            <label for="scan-max-profiles">Máx. de seguidores para analisar</label>
+            <input id="scan-max-profiles" type="number" value="40" min="1" max="150" />
+          </div>
+        </div>
+        <div id="scan-session-panel" class="hidden">
+          <label for="scan-sessionid">Cookie de sessão (sessionid) do seu Instagram</label>
+          <input id="scan-sessionid" type="password" placeholder="Cole aqui o valor do cookie sessionid" />
+          <p class="hint">Como pegar: no navegador, faça login no Instagram, aperte F12 → Application → Cookies → copie o valor de <code>sessionid</code>. Fica só no seu servidor local, não é enviado para mais ninguém.</p>
         </div>
       </div>
     </section>

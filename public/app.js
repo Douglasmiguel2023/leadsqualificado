@@ -23,8 +23,15 @@ function renderLeads(container, leads) {
     return;
   }
   container.innerHTML = leads
-    .map(
-      lead => `
+    .map(lead => {
+      const meta = [];
+      if (lead.type === 'perfil') {
+        if (lead.followers != null) meta.push(`👥 ${Number(lead.followers).toLocaleString('pt-BR')} seguidores`);
+        if (lead.fullName) meta.push(lead.fullName);
+      } else if (lead.likes) {
+        meta.push(`❤️ ${lead.likes} curtidas no comentário`);
+      }
+      return `
       <div class="lead ${lead.level}">
         <div class="score">${lead.score}<small>pts</small></div>
         <div class="lead-body">
@@ -32,11 +39,12 @@ function renderLeads(container, leads) {
             <span class="user">@${escapeHtml(lead.user)}</span>
             <span class="level">${levelEmoji(lead.level)} ${lead.level}</span>
           </div>
+          ${meta.length ? `<p class="lead-meta">${meta.map(escapeHtml).join(' • ')}</p>` : ''}
           <p class="lead-text">${escapeHtml(lead.text)}</p>
           <div class="tags">${(lead.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
         </div>
-      </div>`
-    )
+      </div>`;
+    })
     .join('');
 }
 
@@ -63,12 +71,22 @@ function showResults(data) {
   document.querySelectorAll('.filter').forEach(b => b.classList.toggle('active', b.dataset.filter === 'todos'));
 
   const post = data.post || {};
-  $('post-info').innerHTML = `
-    <div class="stat-box"><div class="value">${post.owner ? '@' + escapeHtml(post.owner) : '—'}</div><div class="label">Perfil</div></div>
-    <div class="stat-box"><div class="value">${post.likeCount ?? '—'}</div><div class="label">Curtidas</div></div>
-    <div class="stat-box"><div class="value">${data.totalComments ?? post.commentCount ?? '—'}</div><div class="label">Comentários analisados</div></div>
-    <div class="stat-box"><div class="value">${data.totalLikers ?? '—'}</div><div class="label">Curtidas coletadas</div></div>
-    ${post.caption ? `<p class="caption">📝 ${escapeHtml(post.caption.slice(0, 300))}${post.caption.length > 300 ? '...' : ''}</p>` : ''}`;
+  const profile = data.profile;
+  const owner = profile ? profile.username : post.owner;
+  const boxes = [];
+  boxes.push(`<div class="stat-box"><div class="value">${owner ? '@' + escapeHtml(owner) : '—'}</div><div class="label">Perfil</div></div>`);
+  if (profile) {
+    boxes.push(`<div class="stat-box"><div class="value">${profile.followers ? profile.followers.toLocaleString('pt-BR') : '—'}</div><div class="label">Seguidores</div></div>`);
+    boxes.push(`<div class="stat-box"><div class="value">${data.mode === 'followers' ? (data.profilesAnalyzed ?? '—') : (data.totalComments ?? '—')}</div><div class="label">${data.mode === 'followers' ? 'Perfis analisados' : 'Comentários analisados'}</div></div>`);
+    if (profile.category) boxes.push(`<div class="stat-box"><div class="value" style="font-size:14px">${escapeHtml(profile.category)}</div><div class="label">Categoria</div></div>`);
+  } else {
+    boxes.push(`<div class="stat-box"><div class="value">${post.likeCount ?? '—'}</div><div class="label">Curtidas</div></div>`);
+    boxes.push(`<div class="stat-box"><div class="value">${data.totalComments ?? post.commentCount ?? '—'}</div><div class="label">Comentários analisados</div></div>`);
+    boxes.push(`<div class="stat-box"><div class="value">${data.totalLikers ?? '—'}</div><div class="label">Curtidas coletadas</div></div>`);
+  }
+  const caption = profile ? profile.biography : post.caption;
+  const bioLabel = profile ? '📄 Bio' : '📝 Legenda';
+  $('post-info').innerHTML = boxes.join('') + (caption ? `<p class="caption">${bioLabel} ${escapeHtml(String(caption).slice(0, 300))}${String(caption).length > 300 ? '...' : ''}</p>` : '');
 
   renderStats(state.leads);
   renderLeads($('leads-list'), state.leads);
@@ -185,15 +203,55 @@ function loadDemo() {
 }
 
 function switchTab(tab) {
-  const isAuto = tab === 'auto';
-  $('tab-auto').classList.toggle('active', isAuto);
-  $('tab-manual').classList.toggle('active', !isAuto);
-  $('panel-auto').classList.toggle('hidden', !isAuto);
-  $('panel-manual').classList.toggle('hidden', isAuto);
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  $('panel-auto').classList.toggle('hidden', tab !== 'auto');
+  $('panel-manual').classList.toggle('hidden', tab !== 'manual');
+  $('panel-scan').classList.toggle('hidden', tab !== 'scan');
+}
+
+async function scanProfile() {
+  const username = $('scan-username').value.trim();
+  if (!username) return showAlert('Digite o @ do perfil que quer varrer.');
+  const mode = $('scan-mode').value;
+  const btn = $('btn-scan');
+  btn.disabled = true;
+  btn.textContent = 'Varrendo...';
+  try {
+    const res = await fetch('/api/scan-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username,
+        mode,
+        keywords: $('keywords').value,
+        maxPosts: $('scan-max-posts').value,
+        maxProfiles: $('scan-max-profiles').value,
+        sessionId: $('scan-sessionid').value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro na varredura do perfil.');
+    showResults(data);
+  } catch (err) {
+    showAlert(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Varrer';
+  }
+}
+
+function updateScanMode() {
+  const isFollowers = $('scan-mode').value === 'followers';
+  $('scan-posts-group').classList.toggle('hidden', isFollowers);
+  $('scan-session-group').classList.toggle('hidden', !isFollowers);
+  $('scan-session-panel').classList.toggle('hidden', !isFollowers);
 }
 
 $('tab-auto').addEventListener('click', () => switchTab('auto'));
 $('tab-manual').addEventListener('click', () => switchTab('manual'));
+$('tab-scan').addEventListener('click', () => switchTab('scan'));
+$('btn-scan').addEventListener('click', scanProfile);
+$('scan-mode').addEventListener('change', updateScanMode);
 $('btn-analyze').addEventListener('click', analyzeAuto);
 $('btn-analyze-manual').addEventListener('click', analyzeManual);
 $('btn-demo').addEventListener('click', loadDemo);

@@ -56,7 +56,7 @@ main { max-width: 980px; margin: 0 auto; padding: 16px 20px 40px; display: flex;
 .tab.active { border-color: var(--accent); color: var(--text); background: rgba(139, 92, 246, 0.12); }
 
 label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 6px; }
-input[type="url"], input[type="text"], textarea {
+input[type="url"], input[type="text"], input[type="password"], input[type="number"], select, textarea {
   width: 100%;
   background: #0d0e14;
   border: 1px solid var(--border);
@@ -67,7 +67,7 @@ input[type="url"], input[type="text"], textarea {
   font-family: inherit;
 }
 textarea { resize: vertical; }
-input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
 
 .row { display: flex; gap: 10px; margin-top: 8px; }
 .row.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -159,6 +159,7 @@ h2 { font-size: 18px; }
 .lead.warm .level { background: rgba(245, 158, 11, 0.15); color: var(--warm); }
 .lead.cold .level { background: rgba(56, 189, 248, 0.15); color: var(--cold); }
 .lead-text { color: #cdd3e1; font-size: 14px; margin: 7px 0; line-height: 1.5; word-wrap: break-word; }
+.lead-meta { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
 .tags { display: flex; gap: 6px; flex-wrap: wrap; }
 .tag { font-size: 11.5px; padding: 4px 10px; border-radius: 999px; background: rgba(139, 92, 246, 0.14); color: #c4b5fd; }
 .empty { color: var(--muted); text-align: center; padding: 24px 0; font-size: 14px; }
