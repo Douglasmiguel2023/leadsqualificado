@@ -1,8 +1,18 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
-const { extractShortcode, fetchPost, fetchComments, fetchLikers } = require('./lib/instagram');
-const { DEFAULT_NICHE_KEYWORDS, analyzeComments } = require('./lib/scoring');
+const {
+  extractShortcode,
+  shortcodeToMediaId,
+  cleanUsername,
+  sleep,
+  fetchPost,
+  fetchComments,
+  fetchLikers,
+  fetchProfile,
+  fetchFollowers
+} = require('./lib/instagram');
+const { DEFAULT_NICHE_KEYWORDS, analyzeComments, scoreProfileLead } = require('./lib/scoring');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -94,6 +104,52 @@ app.post('/api/analyze-manual', (req, res) => {
       totalLikers: likers.length,
       leads
     });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/scan-profile', async (req, res) => {
+  try {
+    const username = cleanUsername(req.body.username);
+    const nicheKeywords = parseKeywords(req.body.keywords);
+    const profile = await fetchProfile(username);
+    const mode = req.body.mode === 'followers' ? 'followers' : 'comments';
+
+    if (mode === 'comments') {
+      const maxPosts = Math.min(Math.max(Number(req.body.maxPosts) || 6, 1), 12);
+      const comments = [];
+      const likers = [];
+      for (const post of profile.posts.slice(0, maxPosts)) {
+        try {
+          const mediaId = shortcodeToMediaId(post.shortcode);
+          comments.push(...(await fetchComments(mediaId, 100)));
+          likers.push(...(await fetchLikers(mediaId).catch(() => [])));
+        } catch {}
+      }
+      const leads = analyzeComments(comments, { nicheKeywords, likers });
+      return res.json({ profile, mode, totalComments: comments.length, totalLikers: likers.length, leads });
+    }
+
+    const sessionId = String(req.body.sessionId || '').trim();
+    if (!sessionId) {
+      throw new Error(
+        'Para varrer seguidores, informe seu cookie de sessão (sessionid) do Instagram. Sem ele, use o modo de comentários.'
+      );
+    }
+    const maxFollowers = Math.min(Math.max(Number(req.body.maxFollowers) || 200, 1), 1000);
+    const maxProfiles = Math.min(Math.max(Number(req.body.maxProfiles) || 40, 1), 150);
+    const followers = await fetchFollowers(profile.userId, sessionId, maxFollowers);
+    const leads = [];
+    for (const follower of followers.slice(0, maxProfiles)) {
+      try {
+        const followerProfile = await fetchProfile(follower.username);
+        if (!followerProfile.isPrivate) leads.push(scoreProfileLead(followerProfile, nicheKeywords));
+        await sleep(1200);
+      } catch {}
+    }
+    leads.sort((a, b) => b.score - a.score);
+    res.json({ profile, mode, totalFollowers: followers.length, profilesAnalyzed: leads.length, leads });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
