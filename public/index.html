@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeadFinder — Leads Qualificados do Instagram</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">🎯</span>
+      <div>
+        <h1>LeadFinder</h1>
+        <p>Captação de leads qualificados a partir de posts do Instagram</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="tabs">
+        <button id="tab-auto" class="tab active">🔗 Analisar post (URL)</button>
+        <button id="tab-manual" class="tab">✍️ Modo manual</button>
+      </div>
+
+      <div id="panel-auto" class="panel">
+        <label for="post-url">URL do post ou reel público</label>
+        <div class="row">
+          <input id="post-url" type="url" placeholder="https://www.instagram.com/p/Cxxxxxxx/" />
+          <button id="btn-analyze" class="primary">Analisar</button>
+        </div>
+        <details class="niche">
+          <summary>Palavras-chave do nicho (opcional)</summary>
+          <textarea id="keywords" rows="3" placeholder="Deixe vazio para usar o padrão de design, ou separe por vírgula: logo, identidade visual, site..."></textarea>
+        </details>
+        <p class="hint">Dica: a coleta automática funciona melhor rodando o app na sua máquina (IP residencial). Se o Instagram bloquear, use o modo manual.</p>
+      </div>
+
+      <div id="panel-manual" class="panel hidden">
+        <label for="manual-comments">Comentários (um por linha, formato <code>usuario: comentario</code>)</label>
+        <textarea id="manual-comments" rows="8" placeholder="maria_silva: quanto custa um feed completo?&#10;joao_empresas: quero uma identidade visual pro meu negócio, me chama?&#10;ana_lima: top! 🔥"></textarea>
+        <div class="row two">
+          <div>
+            <label for="manual-likers">Quem curtiu (usuários separados por vírgula)</label>
+            <input id="manual-likers" type="text" placeholder="maria_silva, joao_empresas" />
+          </div>
+          <div>
+            <label for="manual-caption">Legenda do post (opcional)</label>
+            <input id="manual-caption" type="text" placeholder="Novo projeto de identidade visual 🔥" />
+          </div>
+        </div>
+        <div class="row">
+          <button id="btn-analyze-manual" class="primary">Analisar comentários</button>
+          <button id="btn-demo" class="ghost">Carregar exemplo</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="alert" class="alert hidden"></div>
+
+    <section id="post-summary" class="card hidden">
+      <h2>📊 Post analisado</h2>
+      <div id="post-info"></div>
+    </section>
+
+    <section id="results" class="card hidden">
+      <div class="results-head">
+        <h2>🏆 Leads encontrados</h2>
+        <div class="results-actions">
+          <div class="filters">
+            <button class="filter active" data-filter="todos">Todos</button>
+            <button class="filter" data-filter="quente">🔥 Quentes</button>
+            <button class="filter" data-filter="morno">🟡 Mornos</button>
+            <button class="filter" data-filter="frio">❄️ Frios</button>
+          </div>
+          <button id="btn-save" class="ghost">💾 Salvar leads</button>
+        </div>
+      </div>
+      <div id="stats" class="stats"></div>
+      <div id="leads-list"></div>
+    </section>
+
+    <section id="saved" class="card hidden">
+      <div class="results-head">
+        <h2>📁 Leads salvos</h2>
+        <div class="results-actions">
+          <a id="btn-export" class="button ghost" href="/api/export">⬇️ Exportar CSV</a>
+          <button id="btn-clear" class="danger">Limpar</button>
+        </div>
+      </div>
+      <div id="saved-list"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>LeadFinder • análise de dados públicos do Instagram para prospecção • use com responsabilidade</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
